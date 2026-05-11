@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/skill-tracker-tutor/static/css/main.1421e3fa.css",
+    "main.js": "/skill-tracker-tutor/static/js/main.1febb20e.js",
+    "index.html": "/skill-tracker-tutor/index.html",
+    "main.1421e3fa.css.map": "/skill-tracker-tutor/static/css/main.1421e3fa.css.map",
+    "main.1febb20e.js.map": "/skill-tracker-tutor/static/js/main.1febb20e.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.1421e3fa.css",
+    "static/js/main.1febb20e.js"
+  ]
+}
