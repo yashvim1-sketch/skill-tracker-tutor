@@ -8,9 +8,9 @@ import SkillLegend from './SkillLegend';
  * Props: studentId, book, onClose, onSubmit
  */
 export default function TutorSkillRatingModal({ studentId, book, onClose, onSubmit }) {
-  const [ratings,        setRatings]        = useState({});
+  const [ratings, setRatings] = useState({});
   const [tooltipVisible, setTooltipVisible] = useState(null);
-  const [isVisible,      setIsVisible]      = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const existing = getTutorBookScores(studentId, book.id);
@@ -33,9 +33,50 @@ export default function TutorSkillRatingModal({ studentId, book, onClose, onSubm
 
   const allRated = SKILLS.every(s => ratings[s.id] !== undefined);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!allRated) return;
+
     const saved = saveTutorBookScores(studentId, book.id, ratings);
+
+    const payload = {
+      studentId: studentId || "stu_001",
+      activityId: book.id,
+      activityTitle: book.title || book.name || `Book ${book.id}`,
+      activityType: "Book",
+      status: "Completed",
+      completedAt: new Date().toISOString(),
+
+      cognitive: Number(ratings.cognitive || 0),
+      creative: Number(ratings.creative || 0),
+      communication: Number(ratings.communication || 0),
+      socialEmotional: Number(ratings.socialEmotional || 0),
+      physical: Number(ratings.physical || 0),
+      practical: Number(ratings.practical || 0)
+    };
+
+    try {
+      const response = await fetch(
+        "https://www.thebeyondbox.org/_functions/updateStudentProgress",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.success) {
+        console.error("Wix save failed:", result);
+        alert("Saved locally, but Wix update failed.");
+      }
+    } catch (error) {
+      console.error("Error sending data to Wix:", error);
+      alert("Saved locally, but could not connect to Wix.");
+    }
+
     setIsVisible(false);
     setTimeout(() => onSubmit(book, saved), 280);
   };
