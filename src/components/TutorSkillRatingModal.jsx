@@ -38,12 +38,25 @@ export default function TutorSkillRatingModal({ studentId, book, onClose, onSubm
 
     const saved = saveTutorBookScores(studentId, book.id, ratings);
 
+    const skillValues = [
+      Number(ratings.cognitive || 0),
+      Number(ratings.creative || 0),
+      Number(ratings.communication || 0),
+      Number(ratings.socialEmotional || 0),
+      Number(ratings.physical || 0),
+      Number(ratings.practical || 0)
+    ];
+
+    const score =
+      skillValues.reduce((sum, value) => sum + value, 0) / skillValues.length;
+
     const payload = {
-      studentId: studentId || "stu_001",
+      studentId: studentId || "student_aarav",
       activityId: book.id,
       activityTitle: book.title || book.name || `Book ${book.id}`,
       activityType: "Book",
       status: "Completed",
+      score: Number(score.toFixed(2)),
       completedAt: new Date().toISOString(),
 
       cognitive: Number(ratings.cognitive || 0),
