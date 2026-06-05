@@ -1,64 +1,44 @@
-const WIX_API = 'https://bhansaliaesha.wixsite.com/website/_functions';
+/**
+ * tutorApi.js
+ * 
+ * All data fetching goes through the Wix postMessage bridge (wixBridge).
+ * The Wix parent page handles the actual wixData queries and sends results back.
+ * This avoids all CORS issues entirely.
+ */
+import { sendToWix } from './wixBridge';
 
-
+/**
+ * Fetch all students in a tutor's batch.
+ * Wix page must handle message type: 'FETCH_STUDENTS'
+ * Expected response data: { students: [...] }
+ */
 export async function fetchBatchStudents(tutorId, batchName) {
-  try {
-    const url = `${WIX_API}/batchStudents?tutorId=${encodeURIComponent(tutorId)}&batchName=${encodeURIComponent(batchName)}&t=${Date.now()}`;
-    const res = await fetch(url, { 
-      method: 'GET', 
-      mode: 'cors',
-      cache: 'no-store',
-      headers: { 'Accept': 'application/json' }
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("API Error Response:", text);
-      throw new Error(`Status ${res.status}: ${text}`);
-    }
-    return await res.json();
-  } catch (error) {
-    console.error("fetchBatchStudents error:", error);
-    throw error;
-  }
+  return sendToWix('FETCH_STUDENTS', { tutorId, batchName });
 }
 
+/**
+ * Fetch all book scores for a student.
+ * Wix page must handle message type: 'FETCH_STUDENT_SCORES'
+ * Expected response data: { scores: [...], skillScores: {...}, activities: [...] }
+ */
 export async function fetchStudentScores(studentId) {
-  try {
-    const url = `${WIX_API}/studentScores?studentId=${encodeURIComponent(studentId)}&t=${Date.now()}`;
-    const res = await fetch(url, { 
-      method: 'GET', 
-      mode: 'cors',
-      cache: 'no-store',
-      headers: { 'Accept': 'application/json' }
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("API Error Response:", text);
-      throw new Error(`Status ${res.status}: ${text}`);
-    }
-    return await res.json();
-  } catch (error) {
-    console.error("fetchStudentScores error:", error);
-    throw error;
-  }
+  return sendToWix('FETCH_STUDENT_SCORES', { studentId });
 }
 
+/**
+ * Save book skill scores for a student.
+ * Wix page must handle message type: 'SAVE_BOOK_SCORES'
+ * Expected response data: { success: true }
+ */
 export async function saveBookScores(data) {
-  const res = await fetch(`${WIX_API}/saveBookScores`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error(`Failed to save scores: ${res.status}`);
-  return res.json(); // { success: true }
+  return sendToWix('SAVE_BOOK_SCORES', { payload: data });
 }
 
+/**
+ * Save a tutor's comment for a student.
+ * Wix page must handle message type: 'SAVE_TUTOR_COMMENT'
+ * Expected response data: { success: true }
+ */
 export async function saveTutorComment(studentId, comment) {
-  const res = await fetch(`${WIX_API}/saveTutorComment`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ studentId, comment }),
-  });
-  if (!res.ok) throw new Error(`Failed to save comment: ${res.status}`);
-  return res.json(); // { success: true }
+  return sendToWix('SAVE_TUTOR_COMMENT', { studentId, comment });
 }

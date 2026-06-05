@@ -4,8 +4,8 @@ import { fetchBatchStudents } from '../api/tutorApi';
 /**
  * useTutorData
  * Manages:
- *  - tutorId / batchName from postMessage
- *  - students list for the batch
+ *  - tutorId / batchName received via postMessage from the Wix parent page
+ *  - students list fetched via postMessage bridge (no HTTP/CORS)
  */
 export function useTutorData() {
   const [tutorId,   setTutorId]   = useState(null);
@@ -15,22 +15,23 @@ export function useTutorData() {
   const [studentsLoading,  setStudentsLoading]  = useState(false);
   const [studentsError,    setStudentsError]    = useState(null);
 
-  // Listen for postMessage from Wix embed
+  // Step 1: Signal to Wix that React is ready, then receive session data
   useEffect(() => {
-    // Signal to parent that React is ready
+    // Tell the Wix parent page we are ready to receive tutorId/batchName
     window.parent.postMessage({ type: 'REACT_READY' }, '*');
 
     const handleMessage = (event) => {
       const data = event.data;
       if (!data) return;
 
-      // Accept both new and old message formats
-      const tid = data.tutorId;
-      const bn  = data.batchName || (data.type === 'WIX_SESSION' ? data.batchName : null);
-
-      if (tid) {
-        setTutorId(tid);
-        setBatchName(bn || '');
+      // Only handle session data messages (not our own bridge responses)
+      if (data.type === 'WIX_SESSION' || data.tutorId) {
+        const tid = data.tutorId;
+        const bn  = data.batchName || '';
+        if (tid) {
+          setTutorId(tid);
+          setBatchName(bn);
+        }
       }
     };
 
@@ -38,16 +39,17 @@ export function useTutorData() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Fetch students automatically when tutorId and batchName are present
+  // Step 2: Once we have tutorId + batchName, fetch students via postMessage bridge
   useEffect(() => {
-    if (tutorId && batchName) {
-      setStudentsLoading(true);
-      setStudentsError(null);
-      fetchBatchStudents(tutorId, batchName)
-        .then(data => setStudents(data.students || []))
-        .catch(err => setStudentsError(err.message))
-        .finally(() => setStudentsLoading(false));
-    }
+    if (!tutorId || !batchName) return;
+
+    setStudentsLoading(true);
+    setStudentsError(null);
+
+    fetchBatchStudents(tutorId, batchName)
+      .then(data => setStudents(data.students || []))
+      .catch(err => setStudentsError(err.message))
+      .finally(() => setStudentsLoading(false));
   }, [tutorId, batchName]);
 
   return {
