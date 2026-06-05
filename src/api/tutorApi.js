@@ -1,10 +1,5 @@
 const WIX_API = 'https://bhansaliaesha.wixsite.com/website/_functions';
 
-export async function fetchTutorBatches(tutorId) {
-  const res = await fetch(`${WIX_API}/tutorBatches?tutorId=${encodeURIComponent(tutorId)}`);
-  if (!res.ok) throw new Error(`Failed to fetch batches: ${res.status}`);
-  return res.json(); // { batches: [{batchName, studentCount}] }
-}
 
 export async function fetchBatchStudents(tutorId, batchName) {
   const res = await fetch(
