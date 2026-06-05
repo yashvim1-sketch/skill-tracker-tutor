@@ -25,11 +25,24 @@ export function useTutorData() {
 
   // Listen for postMessage from Wix embed
   useEffect(() => {
+    // Tell parent we are ready to receive session
+    window.parent.postMessage({ type: 'REACT_READY' }, '*');
+
     const handler = (event) => {
       const data = event.data;
-      if (data && data.tutorId) {
+      if (!data) return;
+
+      // New format from HTML bridge
+      if (data.type === 'WIX_SESSION' && data.tutorId) {
         setTutorId(data.tutorId);
-        setBatchName(data.batchName || null);
+        setBatchName(data.batchName || '');
+        return;
+      }
+
+      // Old format fallback
+      if (data.tutorId) {
+        setTutorId(data.tutorId);
+        setBatchName(data.batchName || '');
       }
     };
     window.addEventListener('message', handler);
