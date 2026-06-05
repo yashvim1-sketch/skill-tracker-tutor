@@ -2,11 +2,24 @@ const WIX_API = 'https://bhansaliaesha.wixsite.com/website/_functions';
 
 
 export async function fetchBatchStudents(tutorId, batchName) {
-  const res = await fetch(
-    `${WIX_API}/batchStudents?tutorId=${encodeURIComponent(tutorId)}&batchName=${encodeURIComponent(batchName)}`
-  );
-  if (!res.ok) throw new Error(`Failed to fetch students: ${res.status}`);
-  return res.json(); // { students: [{memberId, fullName, email, batchName, tutorComment}] }
+  try {
+    const url = `${WIX_API}/batchStudents?tutorId=${encodeURIComponent(tutorId)}&batchName=${encodeURIComponent(batchName)}&t=${Date.now()}`;
+    const res = await fetch(url, { 
+      method: 'GET', 
+      mode: 'cors',
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("API Error Response:", text);
+      throw new Error(`Status ${res.status}: ${text}`);
+    }
+    return await res.json();
+  } catch (error) {
+    console.error("fetchBatchStudents error:", error);
+    throw error;
+  }
 }
 
 export async function fetchStudentScores(studentId) {

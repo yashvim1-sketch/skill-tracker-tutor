@@ -24,13 +24,17 @@ export default function TutorHomePage() {
       <header className="home-header">
         <div className="home-header-gradient-strip" />
         <div className="home-header-inner">
-          <div className="logo-text">
-            <span className="logo-emoji">📚</span>
-            <span className="logo-title">Skill Tracker</span>
-          </div>
-          <p className="home-subtitle">
-            {batchName ? `${batchName} — Skill Tracker` : 'Skill Tracker'}
-          </p>
+          {batchName ? (
+            <div className="logo-text">
+              <span className="logo-emoji">🗂️</span>
+              <span className="logo-title">{batchName}</span>
+            </div>
+          ) : (
+            <div className="logo-text">
+              <span className="logo-emoji">⏳</span>
+              <span className="logo-title">Loading Session...</span>
+            </div>
+          )}
         </div>
       </header>
 
@@ -72,7 +76,7 @@ export default function TutorHomePage() {
             </div>
 
             <h2 className="books-section-title">
-              👩‍🏫 Students — {batchName}
+              👩‍🏫 Students
               {!studentsLoading && ` (${filteredStudents.length})`}
             </h2>
 
