@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/skill-tracker-tutor/static/css/main.1421e3fa.css",
-    "main.js": "/skill-tracker-tutor/static/js/main.dccf1434.js",
+    "main.js": "/skill-tracker-tutor/static/js/main.a3e376df.js",
     "index.html": "/skill-tracker-tutor/index.html",
     "main.1421e3fa.css.map": "/skill-tracker-tutor/static/css/main.1421e3fa.css.map",
-    "main.dccf1434.js.map": "/skill-tracker-tutor/static/js/main.dccf1434.js.map"
+    "main.a3e376df.js.map": "/skill-tracker-tutor/static/js/main.a3e376df.js.map"
   },
   "entrypoints": [
     "static/css/main.1421e3fa.css",
-    "static/js/main.dccf1434.js"
+    "static/js/main.a3e376df.js"
   ]
 }
