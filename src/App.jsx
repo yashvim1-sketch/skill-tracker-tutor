@@ -1,10 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
-
-// Student app (original — unchanged)
-import HomePage           from './pages/HomePage';
-import BookAnalysisPage   from './pages/BookAnalysisPage';
-import OverallPage        from './pages/OverallPage';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Tutor app
 import TutorHomePage         from './pages/TutorHomePage';
@@ -18,16 +13,14 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* ── Student app (original) ── */}
-        <Route path="/"               element={<HomePage />} />
-        <Route path="/book/:bookId"   element={<BookAnalysisPage />} />
-        <Route path="/overall"        element={<OverallPage />} />
+        {/* Redirect root to tutor */}
+        <Route path="/" element={<Navigate to="/tutor" replace />} />
 
-        {/* ── Tutor app ── */}
-        <Route path="/tutor"                                         element={<TutorHomePage />} />
-        <Route path="/tutor/student/:studentId"                      element={<TutorStudentPage />} />
-        <Route path="/tutor/student/:studentId/book/:bookId"         element={<TutorBookAnalysisPage />} />
-        <Route path="/tutor/student/:studentId/overall"              element={<TutorOverallPage />} />
+        {/* Tutor app */}
+        <Route path="/tutor"                                     element={<TutorHomePage />} />
+        <Route path="/tutor/student/:studentId"                  element={<TutorStudentPage />} />
+        <Route path="/tutor/student/:studentId/book/:bookId"     element={<TutorBookAnalysisPage />} />
+        <Route path="/tutor/student/:studentId/overall"          element={<TutorOverallPage />} />
       </Routes>
     </Router>
   );

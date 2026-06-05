@@ -1,100 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { SKILLS, RATING_COLORS } from '../data/books';
-import { getTutorBookScores, saveTutorBookScores } from '../data/tutorStorage';
 import SkillLegend from './SkillLegend';
 
 /**
- * Centered modal (position:fixed) for tutor score entry.
- * Props: studentId, book, onClose, onSubmit
+ * TutorSkillRatingModal
+ * Props: studentId, tutorId, batchName, book, existingScore, saveScores, onClose, onSubmit
+ *
+ * saveScores is the function from useStudentData — it calls the Wix API.
+ * existingScore is the score object from the API (or null if none yet).
  */
-export default function TutorSkillRatingModal({ studentId, book, onClose, onSubmit }) {
-  const [ratings, setRatings] = useState({});
+export default function TutorSkillRatingModal({
+  studentId, tutorId, batchName,
+  book, existingScore,
+  saveScores, onClose, onSubmit,
+}) {
+  const [ratings,        setRatings]        = useState({});
   const [tooltipVisible, setTooltipVisible] = useState(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible,      setIsVisible]      = useState(false);
+  const [saving,         setSaving]         = useState(false);
+  const [saveErr,        setSaveErr]        = useState('');
 
+  // Pre-populate from existing API score
   useEffect(() => {
-    const existing = getTutorBookScores(studentId, book.id);
-    if (existing) {
+    if (existingScore) {
       const loaded = {};
-      SKILLS.forEach(s => { if (existing[s.id]) loaded[s.id] = existing[s.id]; });
+      SKILLS.forEach(s => {
+        if (existingScore[s.id] != null) loaded[s.id] = existingScore[s.id];
+      });
       setRatings(loaded);
     }
     setTimeout(() => setIsVisible(true), 10);
-  }, [studentId, book.id]);
+  }, [existingScore]);
 
   const handleClose = () => {
     setIsVisible(false);
     setTimeout(onClose, 280);
   };
 
-  const handleSelect = (skillId, value) => {
+  const handleSelect = (skillId, value) =>
     setRatings(prev => ({ ...prev, [skillId]: value }));
-  };
 
   const allRated = SKILLS.every(s => ratings[s.id] !== undefined);
 
   const handleSubmit = async () => {
-    if (!allRated) return;
-
-    const saved = saveTutorBookScores(studentId, book.id, ratings);
-
-    const skillValues = [
-      Number(ratings.cognitive || 0),
-      Number(ratings.creative || 0),
-      Number(ratings.communication || 0),
-      Number(ratings.socialEmotional || 0),
-      Number(ratings.physical || 0),
-      Number(ratings.practical || 0)
-    ];
-
-    const score =
-      skillValues.reduce((sum, value) => sum + value, 0) / skillValues.length;
-
-    const payload = {
-      studentId: studentId || "student_aarav",
-      activityId: book.id,
-      activityTitle: book.title || book.name || `Book ${book.id}`,
-      activityType: "Book",
-      status: "Completed",
-      score: Number(score.toFixed(2)),
-      completedAt: new Date().toISOString(),
-
-      cognitive: Number(ratings.cognitive || 0),
-      creative: Number(ratings.creative || 0),
-      communication: Number(ratings.communication || 0),
-      socialEmotional: Number(ratings.socialEmotional || 0),
-      physical: Number(ratings.physical || 0),
-      practical: Number(ratings.practical || 0)
-    };
-
+    if (!allRated || saving) return;
+    setSaving(true);
+    setSaveErr('');
     try {
-      const response = await fetch(
-        "https://www.thebeyondbox.org/_functions/updateStudentProgress",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        }
-      );
-
-      const result = await response.json();
-
-      if (!result.success) {
-        console.error("Wix save failed:", result);
-        alert("Saved locally, but Wix update failed.");
-      }
-    } catch (error) {
-      console.error("Error sending data to Wix:", error);
-      alert("Saved locally, but could not connect to Wix.");
+      await saveScores({
+        tutorId,
+        batchName,
+        bookKey:  book.key || book.id,
+        bookName: book.title || book.name,
+        ratings,
+      });
+      setIsVisible(false);
+      setTimeout(() => onSubmit(book), 280);
+    } catch (err) {
+      setSaveErr('Failed to save. Please try again.');
+      setSaving(false);
     }
-
-    setIsVisible(false);
-    setTimeout(() => onSubmit(book, saved), 280);
   };
-
-  const existingData = getTutorBookScores(studentId, book.id);
 
   return (
     <div
@@ -103,7 +69,7 @@ export default function TutorSkillRatingModal({ studentId, book, onClose, onSubm
       onClick={e => e.target === e.currentTarget && handleClose()}
       role="dialog"
       aria-modal="true"
-      aria-label={`Rate skills for ${book.name}`}
+      aria-label={`Rate skills for ${book.title || book.name}`}
     >
       <div
         className="tutor-modal-sheet"
@@ -113,19 +79,15 @@ export default function TutorSkillRatingModal({ studentId, book, onClose, onSubm
         }}
       >
         {/* Header */}
-        <div className="modal-header" style={{ background: book.bgGradient }}>
+        <div className="modal-header" style={{ background: book.bgGradient || '#6366F1' }}>
           <div className="modal-header-left">
-            <span className="modal-book-emoji">{book.emoji}</span>
+            <span className="modal-book-emoji">{book.emoji || '📖'}</span>
             <div>
-              <h2 className="modal-book-name">{book.name}</h2>
+              <h2 className="modal-book-name">{book.title || book.name}</h2>
               <p className="modal-subtitle">Rate skills for this book</p>
             </div>
           </div>
-          <button
-            className="modal-close-btn"
-            onClick={handleClose}
-            aria-label="Close modal"
-          >✕</button>
+          <button className="modal-close-btn" onClick={handleClose} aria-label="Close modal">✕</button>
         </div>
 
         {/* Body */}
@@ -184,13 +146,17 @@ export default function TutorSkillRatingModal({ studentId, book, onClose, onSubm
 
           <SkillLegend compact />
 
+          {saveErr && (
+            <p style={{ color: '#EF4444', textAlign: 'center', marginBottom: 8 }}>{saveErr}</p>
+          )}
+
           <button
             className="btn-primary modal-submit-btn"
-            style={allRated ? { background: book.bgGradient } : {}}
-            disabled={!allRated}
+            style={allRated ? { background: book.bgGradient || '#6366F1' } : {}}
+            disabled={!allRated || saving}
             onClick={handleSubmit}
           >
-            {existingData ? '✏️ Update Scores →' : '💾 Save Scores →'}
+            {saving ? '⏳ Saving…' : existingScore ? '✏️ Update Scores →' : '💾 Save Scores →'}
           </button>
         </div>
       </div>
