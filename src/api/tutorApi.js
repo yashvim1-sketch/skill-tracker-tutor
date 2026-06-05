@@ -18,26 +18,29 @@ export async function fetchBatchStudents(tutorId, batchName) {
     return await res.json();
   } catch (error) {
     console.error("fetchBatchStudents error:", error);
-    // FALLBACK: If Wix API crashes or has a CORS error, provide a dummy student so the user can test the marks page!
-    console.warn("Using fallback student data due to API failure so testing can proceed.");
-    return {
-      students: [
-        {
-          memberId: "dummy-student-1",
-          fullName: "Demo Student",
-          email: "demo@example.com",
-          batchName: batchName,
-          tutorComment: ""
-        }
-      ]
-    };
+    throw error;
   }
 }
 
 export async function fetchStudentScores(studentId) {
-  const res = await fetch(`${WIX_API}/studentScores?studentId=${encodeURIComponent(studentId)}`);
-  if (!res.ok) throw new Error(`Failed to fetch scores: ${res.status}`);
-  return res.json(); // { scores: [{bookKey, bookName, cognitive, ...}] }
+  try {
+    const url = `${WIX_API}/studentScores?studentId=${encodeURIComponent(studentId)}&t=${Date.now()}`;
+    const res = await fetch(url, { 
+      method: 'GET', 
+      mode: 'cors',
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("API Error Response:", text);
+      throw new Error(`Status ${res.status}: ${text}`);
+    }
+    return await res.json();
+  } catch (error) {
+    console.error("fetchStudentScores error:", error);
+    throw error;
+  }
 }
 
 export async function saveBookScores(data) {
