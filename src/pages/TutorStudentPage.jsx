@@ -19,12 +19,21 @@ export default function TutorStudentPage() {
 
   const {
     loading, error,
-    saveScores, getBookScore, completedCount,
+    saveScores, deleteScore, getBookScore, completedCount,
+    remarks, saveRemarks,
+    deletingBook,
     reload,
   } = useStudentData(studentId);
 
-  const [selectedBook, setSelectedBook] = useState(null);
-  const [toast,        setToast]        = useState('');
+  const [selectedBook,   setSelectedBook]   = useState(null);
+  const [toast,          setToast]          = useState('');
+  const [localRemarks,   setLocalRemarks]   = useState('');
+  const [remarksSaving,  setRemarksSaving]  = useState(false);
+
+  // Sync remarks from hook into local state when first loaded
+  React.useEffect(() => {
+    setLocalRemarks(remarks);
+  }, [remarks]);
 
   const showToast = msg => {
     setToast(msg);
@@ -39,10 +48,30 @@ export default function TutorStudentPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleUndo = useCallback(async (bookKey) => {
+    try {
+      await deleteScore(bookKey);
+      showToast('↩ Scores cleared for this book.');
+    } catch {
+      showToast('⚠️ Could not undo. Please try again.');
+    }
+  }, [deleteScore]);
+
+  const handleSaveRemarks = async () => {
+    setRemarksSaving(true);
+    try {
+      await saveRemarks(localRemarks);
+      showToast('💾 Remarks saved!');
+    } catch {
+      showToast('⚠️ Could not save remarks. Please try again.');
+    } finally {
+      setRemarksSaving(false);
+    }
+  };
+
   const totalCount       = BOOKS.length;
   const progressValue    = totalCount > 0 ? completedCount / totalCount : 0;
   const motivationalText = getMotivationalText(completedCount, totalCount);
-  const canViewOverall   = completedCount > 0;
 
   const ringColor = completedCount === totalCount
     ? '#22C55E'
@@ -114,7 +143,7 @@ export default function TutorStudentPage() {
 
           {/* Book Grid */}
           <section className="books-section">
-            <h2 className="books-section-title">📚 Book Collection</h2>
+            <h2 className="books-section-title">📚 Your Book Collection</h2>
             <div className="books-grid">
               {BOOKS.map(book => (
                 <TutorBookCard
@@ -123,30 +152,44 @@ export default function TutorStudentPage() {
                   book={book}
                   scoreData={getBookScore(book.key)}
                   onSelect={handleSelectBook}
+                  onUndo={handleUndo}
+                  deleting={deletingBook === book.key}
                 />
               ))}
             </div>
           </section>
 
-          {/* Overall CTA */}
-          <div className="overall-cta">
-            {canViewOverall ? (
+          {/* Remarks Section */}
+          <section className="remarks-section">
+            <div className="remarks-card">
+              <h3 className="remarks-title">🗒 Remarks</h3>
+              <textarea
+                className="remarks-textarea"
+                value={localRemarks}
+                onChange={e => setLocalRemarks(e.target.value)}
+                placeholder="Add your remarks for this student…"
+                rows={5}
+              />
               <button
-                className="btn-primary btn-overall"
-                onClick={() =>
-                  navigate(`/tutor/student/${studentId}/overall`, {
-                    state: { studentName, batchName, tutorId },
-                  })
-                }
+                className="btn-primary remarks-save-btn"
+                onClick={handleSaveRemarks}
+                disabled={remarksSaving}
               >
-                View Overall Analysis →
+                {remarksSaving ? 'Saving…' : '💾 Save Remarks'}
               </button>
-            ) : (
-              <button className="btn-primary btn-overall btn-disabled" disabled>
-                View Overall Analysis
-                <span className="btn-disabled-hint">(complete a book first)</span>
-              </button>
-            )}
+            </div>
+          </section>
+
+          {/* View Dashboard CTA */}
+          <div className="overall-cta">
+            <a
+              className="btn-primary btn-overall btn-view-dashboard"
+              href="https://www.thebeyondbox.org/student-dashboard"
+              target="_top"
+              rel="noopener noreferrer"
+            >
+              View Dashboard →
+            </a>
           </div>
         </>
       )}

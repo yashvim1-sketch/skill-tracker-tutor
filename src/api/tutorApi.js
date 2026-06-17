@@ -42,3 +42,12 @@ export async function saveBookScores(data) {
 export async function saveTutorComment(studentId, comment) {
   return sendToWix('SAVE_TUTOR_COMMENT', { studentId, comment });
 }
+
+/**
+ * Delete a book score for a student (Undo action).
+ * Wix page must handle message type: 'DELETE_BOOK_SCORE'
+ * Expected response data: { success: true }
+ */
+export async function deleteBookScore(studentId, bookKey) {
+  return sendToWix('DELETE_BOOK_SCORE', { studentId, bookKey });
+}
