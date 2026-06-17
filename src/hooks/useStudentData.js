@@ -17,6 +17,7 @@ import {
 export function useStudentData(studentId) {
   const [scores,       setScores]       = useState({}); // { [bookKey]: scoreObject }
   const [remarks,      setRemarks]      = useState(''); // tutorComment from UserRoles
+  const [studentName,  setStudentName]  = useState(() => sessionStorage.getItem(`studentName_${studentId}`) || '');
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState(null);
   const [savingBook,   setSavingBook]   = useState(null);
@@ -38,6 +39,12 @@ export function useStudentData(studentId) {
         // Load remarks (tutorComment) if returned by the API
         if (typeof data.tutorComment === 'string') {
           setRemarks(data.tutorComment);
+        }
+
+        // Load student name if returned by the API
+        if (data.studentName) {
+          setStudentName(data.studentName);
+          sessionStorage.setItem(`studentName_${studentId}`, data.studentName);
         }
       })
       .catch(err => setError(err.message))
@@ -125,6 +132,7 @@ export function useStudentData(studentId) {
   return {
     scores,
     remarks,
+    studentName,
     loading,
     error,
     savingBook,

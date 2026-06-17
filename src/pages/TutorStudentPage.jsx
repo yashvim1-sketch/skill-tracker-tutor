@@ -12,18 +12,19 @@ export default function TutorStudentPage() {
   const navigate      = useNavigate();
   const location      = useLocation();
 
-  // Student name + context passed from TutorHomePage via navigate state
-  const studentName = location.state?.studentName || studentId;
-  const batchName   = location.state?.batchName   || '';
-  const tutorId     = location.state?.tutorId     || '';
-
   const {
     loading, error,
     saveScores, deleteScore, getBookScore, completedCount,
     remarks, saveRemarks,
+    studentName: apiStudentName,
     deletingBook,
     reload,
   } = useStudentData(studentId);
+
+  // Student name + context passed from TutorHomePage via navigate state or sessionStorage fallback
+  const batchName   = location.state?.batchName   || sessionStorage.getItem('batchName') || '';
+  const tutorId     = location.state?.tutorId     || sessionStorage.getItem('tutorId') || '';
+  const studentName = location.state?.studentName || apiStudentName || sessionStorage.getItem(`studentName_${studentId}`) || studentId;
 
   const [selectedBook,   setSelectedBook]   = useState(null);
   const [toast,          setToast]          = useState('');

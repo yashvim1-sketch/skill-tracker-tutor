@@ -8,8 +8,8 @@ import { fetchBatchStudents } from '../api/tutorApi';
  *  - students list fetched via postMessage bridge (no HTTP/CORS)
  */
 export function useTutorData() {
-  const [tutorId,   setTutorId]   = useState(null);
-  const [batchName, setBatchName] = useState(null);
+  const [tutorId,   setTutorId]   = useState(() => sessionStorage.getItem('tutorId'));
+  const [batchName, setBatchName] = useState(() => sessionStorage.getItem('batchName'));
 
   const [students,         setStudents]         = useState([]);
   const [studentsLoading,  setStudentsLoading]  = useState(false);
@@ -31,6 +31,8 @@ export function useTutorData() {
         if (tid) {
           setTutorId(tid);
           setBatchName(bn);
+          sessionStorage.setItem('tutorId', tid);
+          sessionStorage.setItem('batchName', bn);
         }
       }
     };
