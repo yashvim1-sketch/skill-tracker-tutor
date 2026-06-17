@@ -185,7 +185,7 @@ export default function TutorStudentPage() {
           <div className="overall-cta">
             <a
               className="btn-primary btn-overall btn-view-dashboard"
-              href="https://www.thebeyondbox.org/student-dashboard"
+              href={`https://www.thebeyondbox.org/student-dashboard?studentId=${studentId}`}
               target="_top"
               rel="noopener noreferrer"
             >
