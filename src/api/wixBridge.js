@@ -17,18 +17,23 @@ let requestIdCounter = 0;
 // Listen for all responses from the Wix parent page
 window.addEventListener('message', (event) => {
   const msg = event.data;
-  if (!msg || !msg.requestId) return;
+  if (!msg) return;
 
-  const pending = pendingRequests[msg.requestId];
-  if (!pending) return;
+  if (msg.requestId) {
+    console.log(`[React wixBridge] Received response for request #${msg.requestId}:`, msg);
+    const pending = pendingRequests[msg.requestId];
+    if (!pending) return;
 
-  clearTimeout(pending.timer);
-  delete pendingRequests[msg.requestId];
+    clearTimeout(pending.timer);
+    delete pendingRequests[msg.requestId];
 
-  if (msg.error) {
-    pending.reject(new Error(msg.error));
-  } else {
-    pending.resolve(msg.data);
+    if (msg.error) {
+      pending.reject(new Error(msg.error));
+    } else {
+      pending.resolve(msg.data);
+    }
+  } else if (msg.type === 'WIX_SESSION') {
+    console.log('[React wixBridge] Received WIX_SESSION data:', msg);
   }
 });
 
@@ -41,9 +46,11 @@ window.addEventListener('message', (event) => {
 export function sendToWix(type, payload = {}, timeoutMs = 12000) {
   return new Promise((resolve, reject) => {
     const requestId = ++requestIdCounter;
+    console.log(`[React wixBridge] Sending request #${requestId} of type "${type}":`, payload);
 
     const timer = setTimeout(() => {
       delete pendingRequests[requestId];
+      console.warn(`[React wixBridge] Request #${requestId} of type "${type}" TIMED OUT after ${timeoutMs / 1000}s`);
       reject(new Error(`Wix did not respond to "${type}" within ${timeoutMs / 1000}s. Make sure the Wix page code is set up correctly.`));
     }, timeoutMs);
 

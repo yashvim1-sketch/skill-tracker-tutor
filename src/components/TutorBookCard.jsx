@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 /**
  * TutorBookCard
@@ -8,6 +8,23 @@ import React from 'react';
  */
 export default function TutorBookCard({ studentId, book, scoreData, onSelect, onUndo, deleting }) {
   const isCompleted = !!scoreData;
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleUndoClick = e => {
+    e.stopPropagation();
+    setShowConfirm(true);
+  };
+
+  const handleConfirm = e => {
+    e.stopPropagation();
+    setShowConfirm(false);
+    onUndo(book.key);
+  };
+
+  const handleCancel = e => {
+    e.stopPropagation();
+    setShowConfirm(false);
+  };
 
   return (
     <div
@@ -18,11 +35,11 @@ export default function TutorBookCard({ studentId, book, scoreData, onSelect, on
           ? `0 0 0 3px ${book.color || '#6366F1'}, 0 8px 30px ${(book.color || '#6366F1')}44`
           : '0 4px 20px rgba(0,0,0,0.12)',
       }}
-      onClick={() => !isCompleted && onSelect(book)}
+      onClick={() => { if (!showConfirm && !isCompleted) onSelect(book); }}
       role="button"
       tabIndex={0}
       aria-label={isCompleted ? `${book.title} — completed` : `Evaluate ${book.title}`}
-      onKeyDown={e => e.key === 'Enter' && !isCompleted && onSelect(book)}
+      onKeyDown={e => e.key === 'Enter' && !showConfirm && !isCompleted && onSelect(book)}
     >
       <div className="book-card-emoji">{book.emoji || '📖'}</div>
       <div className="book-card-body">
@@ -39,10 +56,7 @@ export default function TutorBookCard({ studentId, book, scoreData, onSelect, on
             <button
               className="book-card-undo-btn"
               disabled={deleting}
-              onClick={e => {
-                e.stopPropagation();
-                onUndo(book.key);
-              }}
+              onClick={handleUndoClick}
               title="Undo — clear scores for this book"
             >
               {deleting ? '…' : '↩ Undo'}
@@ -52,6 +66,23 @@ export default function TutorBookCard({ studentId, book, scoreData, onSelect, on
           <span className="book-card-status book-card-status--todo">Tap to evaluate</span>
         )}
       </div>
+
+      {showConfirm && (
+        <div className="undo-dialog" onClick={e => e.stopPropagation()}>
+          <div className="undo-dialog-title">Remove this analysis?</div>
+          <div className="undo-dialog-msg">
+            This will delete the ratings you submitted for {book.title}. You can fill it in again anytime.
+          </div>
+          <div className="undo-dialog-actions">
+            <button className="btn-undo-confirm" onClick={handleConfirm} disabled={deleting}>
+              {deleting ? 'Removing…' : 'Yes, Remove'}
+            </button>
+            <button className="btn-undo-cancel" onClick={handleCancel} disabled={deleting}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
