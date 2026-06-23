@@ -34,12 +34,13 @@ export default function TutorBookCard({ studentId, book, scoreData, onSelect, on
         boxShadow: isCompleted
           ? `0 0 0 3px ${book.color || '#6366F1'}, 0 8px 30px ${(book.color || '#6366F1')}44`
           : '0 4px 20px rgba(0,0,0,0.12)',
+        cursor: 'pointer',
       }}
-      onClick={() => { if (!showConfirm && !isCompleted) onSelect(book); }}
+      onClick={() => { if (!showConfirm) onSelect(book); }}
       role="button"
       tabIndex={0}
       aria-label={isCompleted ? `${book.title} — completed` : `Evaluate ${book.title}`}
-      onKeyDown={e => e.key === 'Enter' && !showConfirm && !isCompleted && onSelect(book)}
+      onKeyDown={e => e.key === 'Enter' && !showConfirm && onSelect(book)}
     >
       <div className="book-card-emoji">{book.emoji || '📖'}</div>
       <div className="book-card-body">
